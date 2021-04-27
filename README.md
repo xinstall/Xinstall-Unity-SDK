@@ -44,7 +44,7 @@ xinstall.RegisterWakeupHandler(getWakeupData);
 ```
 ```C#
 public void getWakeupData(XinstallData wakeupData) {
-        Debug.Log("XinstallSample getWakeupData : 渠道编号=" +wakeupData.channelCode + "， 自定义数据=" + wakeupData.extraData);
+        Debug.Log("XinstallSample getWakeupData : 渠道编号=" +wakeupData.channelCode + "， 自定义数据=" + wakeupData.data);
         //wakeupResult.text = "拉起参数：" + JsonUtility.ToJson(wakeupData);
  }
 ```
@@ -59,7 +59,7 @@ xinstall.getInstallParam(10,getInstallData);
 
 ```c#
 public void getInstallData(XinstallData installData) {
-        Debug.Log("XinstallSample getInstallData : 渠道编号=" + installData.channelCode + "，自定义数据=" + installData.extraData);
+         Debug.Log("XinstallSample getInstallData : 渠道编号=" + installData.channelCode + "，自定义数据=" + installData.data + "，是否是第一次安装=" + installData.isFirstFetch);
         //installResult.text = "安装参数：" + JsonUtility.ToJson(installData);
 }
 ```

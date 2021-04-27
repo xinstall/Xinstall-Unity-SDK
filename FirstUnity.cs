@@ -58,7 +58,7 @@ public class FirstUnity : MonoBehaviour
             Debug.Log("未获取到安装数据");
             installResult.text = "未获取到安装数据";
         } else {
-            Debug.Log("XinstallSample getInstallData : 渠道编号=" + installData.channelCode + "，自定义数据=" + installData.data);
+            Debug.Log("XinstallSample getInstallData : 渠道编号=" + installData.channelCode + "，自定义数据=" + installData.data + "，是否是第一次安装=" + installData.isFirstFetch);
             installResult.text = "安装参数：" + JsonUtility.ToJson(installData);
         }
         
