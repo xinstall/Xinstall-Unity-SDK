@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -31,7 +31,6 @@ public class FirstUnity : MonoBehaviour
         // xinstall.reportRegister();
         installResult.text = "开始安装";
         xinstall.getInstallParam(10,getInstallData);
-        // 
         
     }
 
@@ -52,13 +51,13 @@ public class FirstUnity : MonoBehaviour
     }
 
     // callback
-    public void getInstallData(XinstallData installData)
+    public void getInstallData(XinstallInstallData installData)
     {
         if (installData == null) {
             Debug.Log("未获取到安装数据");
             installResult.text = "未获取到安装数据";
         } else {
-            Debug.Log("XinstallSample getInstallData : 渠道编号=" + installData.channelCode + "，自定义数据=" + installData.data + "，是否是第一次安装=" + installData.isFirstFetch);
+            Debug.Log("XinstallSample getInstallData : 渠道编号=" + installData.channelCode + "，自定义数据=" + installData.data + "，是否是第一次获取安装参数=" + installData.isFirstFetch);
             installResult.text = "安装参数：" + JsonUtility.ToJson(installData);
         }
         
@@ -66,7 +65,12 @@ public class FirstUnity : MonoBehaviour
 
     public void getWakeupData(XinstallData wakeupData)
     {
-        Debug.Log("XinstallSample getWakeupData : 渠道编号=" +wakeupData.channelCode + "， 自定义数据=" + wakeupData.data);
-        wakeupResult.text = "拉起参数：" + JsonUtility.ToJson(wakeupData);
+		if (wakeupData == null) {
+		    Debug.Log("未获取到调起数据");
+		    wakeupResult.text = "未获取到调起数据";
+		} else {
+			Debug.Log("XinstallSample getWakeupData : 渠道编号=" + wakeupData.channelCode + "， 自定义数据=" + wakeupData.data);
+			wakeupResult.text = "拉起参数：" + JsonUtility.ToJson(wakeupData);
+		}
     }
 }
