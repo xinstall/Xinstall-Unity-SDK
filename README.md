@@ -135,6 +135,7 @@ xinstall.reportEffectEvent("effectId",1);
 2. **如果拥有自己的Application**，可参考`AndroidSample`目录中的`XUnityApplication.java`修改自己的Application对 Xinstall 进行初始化，此时`AndroidManifest.xml`中的application设置仍然使用自己的Application
 
 3. **如果需要使用自己的拉起Activity**，可参考`AndroidSample`目录中的`XUnityActivity.java`在拉起Activity的onCreate(Bundle savedInstanceState)和onNewIntent(Intent intent)中添加拉起处理代码
+4. **如果有上架应用宝**,可参考`AndroidSample`目录中的`XUnityActivity.java`在拉起Activity的onResume()中添加拉起处理代码
 
 
 ### 四、导出apk/ipa包并上传

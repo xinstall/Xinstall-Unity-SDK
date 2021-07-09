@@ -19,6 +19,14 @@ public class XUnityActivity extends UnityPlayerActivity {
         super.onNewIntent(intent);
         XInstall.getWakeUpParam(intent, wakeupCallback);
     }
+	
+	// satrt ------------ 选写 当 用户有使用应用宝的时候可以加上这段代码
+	@Override
+	protected void onResume() {
+	    super.onResume();
+	    XInstall.getYybWakeUpParam(this,getIntent(),wakeupCallback);
+	}
+	// end -----------------------------------------------------
 
 
     XWakeUpCallback wakeupCallback = new XWakeUpCallback();

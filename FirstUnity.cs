@@ -36,7 +36,7 @@ public class FirstUnity : MonoBehaviour
 
     public void registerWakeupHandlerButtonClick()
     {
-        xinstall.RegisterWakeupHandler(getWakeupData);
+        xinstall.registerWakeupHandler(getWakeupData);
         wakeupResult.text = "开始获取唤起";
     }
 
