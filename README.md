@@ -115,11 +115,24 @@ xinstall.reportEffectEvent("effectId",1);
 
       ![](res/2.png)
 
-   3. 在XCode中配置Xinstall为当前应用生成的关联域名(Associated Domains)
+   3. 在Xcode中配置Xinstall为当前应用生成的关联域名(Associated Domains)： **applinks:xxxxxxx.xinstall.top** 和 **applinks:xxxxxxx.xinstall.net**
 
-      **具体可以在Xinstall的控制台中找到**，类似**applinks:xxxxxxx.xinstall.top**
+      > 具体的关联域名可在 Xinstall管理后台 - 对应的应用控制台 - iOS下载配置 页面中找到
 
-      ![](res/3.png)
+      ![](https://doc.xinstall.com/Unity3D/res/3.png)
+
+##### 3. 配置Scheme
+
+<font color=#FF0000 >此方法为XinstallSDK 1.2.2最新添加的方法，如果使用报错，请先更新SDK
+更多问题见</font>[iOS常见问题](../QA/iOSWrong.html#4%E3%80%81%E4%B8%BA%E4%BB%80%E4%B9%88sdk%E7%9A%84%E6%96%B9%E6%B3%95%E5%92%8C%E6%96%87%E6%A1%A3%E4%B8%AD%E7%9A%84%E6%96%B9%E6%B3%95%E4%B8%8D%E4%B8%80%E8%87%B4)
+
+在Xcode选中**Target**  ->  **Info**  ->  **URL Types**,配置**Xinstall** 为当前应用生成的 Scheme,如图所示：
+
+![](/Users/daiyi/Desktop/基纬_代码仓库/Xinstall/x-book/Unity3D/res/iOS6.png)
+
+图中4中的值为实例值，具体为xi+appkey格式，如xi4z9yxu8，您也可以在[iOS集成-功能集成-一键拉起](https://www.xinstall.com/admin/integration/ios#2)的文档中找到您对应的Scheme值
+
+
 
 #### Android平台配置
 
