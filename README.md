@@ -29,9 +29,17 @@
    }
    ```
 
+#### 初始化处理
+
+> 在 1.5.0 之后 Unity XinstallSDK 需要手动集成初始化代码（iOS 将写在XinstallAppController类内的init初始化注释了，Android 也将XUnityApplication 类去除了）
+
+##### 初始化代码调用
+
+```c#
+xinstall.init();
+```
+
 #### 集成相关功能
-
-
 
 ##### 1. 一键拉起
 
@@ -128,7 +136,7 @@ xinstall.reportEffectEvent("effectId",1);
 
 在Xcode选中**Target**  ->  **Info**  ->  **URL Types**,配置**Xinstall** 为当前应用生成的 Scheme,如图所示：
 
-![](/Users/daiyi/Desktop/基纬_代码仓库/Xinstall/x-book/Unity3D/res/iOS6.png)
+![](res/iOS6.png)
 
 图中4中的值为实例值，具体为xi+appkey格式，如xi4z9yxu8，您也可以在[iOS集成-功能集成-一键拉起](https://www.xinstall.com/admin/integration/ios#2)的文档中找到您对应的Scheme值
 
@@ -145,13 +153,135 @@ xinstall.reportEffectEvent("effectId",1);
 1. **如果项目已存在自己的`AndroidManifest.xml`文件**，根据下图标注的内容做相应的更改： 
    ![](res/android1.png)
 
-2. **如果拥有自己的Application**，可参考`AndroidSample`目录中的`XUnityApplication.java`修改自己的Application对 Xinstall 进行初始化，此时`AndroidManifest.xml`中的application设置仍然使用自己的Application
 
-3. **如果需要使用自己的拉起Activity**，可参考`AndroidSample`目录中的`XUnityActivity.java`在拉起Activity的onCreate(Bundle savedInstanceState)和onNewIntent(Intent intent)中添加拉起处理代码
-4. **如果有上架应用宝**,可参考`AndroidSample`目录中的`XUnityActivity.java`在拉起Activity的onResume()中添加拉起处理代码
+### 四、 广告平台渠道功能接入
+
+> 如果您在 Xinstall 管理后台对应 App 中，**只使用「自建渠道」，而不使用「广告平台渠道」，则无需进行本小节中额外的集成工作**，也能正常使用 Xinstall 提供的其他功能。
+>
+> 注意：根据目前已有的各大主流广告平台的统计方式，目前 iOS 端和 Android 端均需要用户授权并获取一些设备关键值后才能正常进行 [ 广告平台渠道 ] 的统计，如 IDFA / OAID / GAID 等，对该行为敏感的 App 请慎重使用该功能。
+
+##### 4.1 配置工作
+
+**iOS 端：**
+
+在 Xcode 中打开 iOS 端的工程，在 `Info.plist` 文件中配置一个权限作用声明（如果不配置将导致 App 启动后马上闪退）：
+
+```xml
+<key>NSUserTrackingUsageDescription</key>
+<string>这里是针对获取 IDFA 的作用描述，请根据实际情况填写</string>
+```
+
+在 Xcode 中，找到 App 对应的「Target」，再点击「General」，然后在「Frameworks, Libraries, and Embedded Content」中，添加如下两个框架：
+
+* AppTrackingTransparency.framework
+* AdSupport.framework
+
+**Android 端：**
+
+  相关接入可以参考广告平台联调指南中的[《Android集成指南》](https://doc.xinstall.com/AD/AndroidGuide.html)
+
+1. 接入IMEI需要额外的全下申请，需要在`AndroidManifest`中添加权限声明
+
+   ```java
+   <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+   ```
+
+2. 如果使用OAID，因为内部使用反射获取oaid 参数，所以都需要外部用户接入OAID SDK 。具体接入参考[《Android集成指南》](https://doc.xinstall.com/AD/AndroidGuide.html)
+
+##### 4.2 更换初始化方法
+
+**使用新的 initWithAd 方法，替代原先的 init 方法来进行模块的初始化**
+
+> iOS 端使用该方法时，需要传入 IDFA（在 c# 脚本内）。您可以使用任意方式在 C# 脚本中获取到 IDFA，例如第三方获取 IDFA 的模块。
+>
+> Android 端、oaid 和 gaid 可外部传入也可SDK获取。oaid需要接入OAID SDK。
+
+**入参说明**：需要主动传入参数，字典
+
+入参内部字段：
+
+* iOS 端：
+
+  | 参数名 | 参数类型 | 描述                   |
+  | ------ | -------- | ---------------------- |
+  | idfa   | 字符串   | iOS 系统中的广告标识符 |
+
+* Android 端：
+
+  | 参数名        | 参数类型 | 描述               |
+  | ------------- | -------- | ------------------ |
+  | adEnabled     | boolean  | 是否使用广告功能   |
+  | oaid （可选） | string   | OAID               |
+  | gaid（可选）  | string   | GaID(google Ad ID) |
 
 
-### 四、导出apk/ipa包并上传
+##### 调试示例
+
+```c#
+xinstall = GameObject.Find("XinstallBehaviour").GetComponent<XinstallBehaviour>(); 
+
+XinstallAdConfig adConfig = new XinstallAdConfig();
+// Android 必传参数-----------------
+adConfig.isAdOpen = true;
+// Android 选传参数-----------------
+// advertisingId(gaid) 为null 则gaid 会在SDK自动获取
+adConfig.advertisingId = "测试gaid";
+// oaid 为null 则 oaid 会在SDK内部通过反射自动获取
+adConfig.oaid = "测试oaid";
+
+// iOS 必传参数	
+adConfig.idfa = "测试idfa";
+// 打开SDK 日志服务
+xinstall.setLog(true);
+// 广告集成初始化
+xinstall.initWithAd(adConfig);
+```
+
+##### 4.3、上架须知
+
+**在使用了广告平台渠道后，若您的 App 需要上架，请认真阅读本段内容。**
+
+##### 4.3.1 iOS 端：上架 App Store
+
+1. 如果您的 App 没有接入苹果广告（即在 App 中显示苹果投放的广告），那么在提交审核时，在广告标识符中，请按照下图勾选：
+
+![IDFA](https://cdn.xinstall.com/iOS_SDK%E7%B4%A0%E6%9D%90/IDFA_7.png)
+
+
+
+1. 在 App Store Connect 对应 App —「App隐私」—「数据类型」选项中，需要选择：**“是，我们会从此 App 中收集数据”**：
+
+![AppStore_IDFA_1](https://cdn.xinstall.com/iOS_SDK%E7%B4%A0%E6%9D%90/IDFA_1.png)
+
+在下一步中，勾选「设备 ID」并点击【发布】按钮：
+
+![AppStore_IDFA_2](https://cdn.xinstall.com/iOS_SDK%E7%B4%A0%E6%9D%90/IDFA_2.png)
+
+点击【设置设备 ID】按钮后，在弹出的弹框中，根据实际情况进行勾选：
+
+- 如果您仅仅是接入了 Xinstall 广告平台而使用了 IDFA，那么只需要勾选：**第三方广告**
+- 如果您在接入 Xinstall 广告平台之外，还自行使用 IDFA 进行别的用途，那么在勾选 **第三方广告** 后，还需要您根据您的实际使用情况，进行其他选项的勾选
+
+![AppStore_IDFA_3](https://cdn.xinstall.com/iOS_SDK%E7%B4%A0%E6%9D%90/IDFA_3.png)
+
+![AppStore_IDFA_4](https://cdn.xinstall.com/iOS_SDK%E7%B4%A0%E6%9D%90/IDFA_4.png)
+
+勾选完成后点击【下一步】按钮，在 **“从此 App 中收集的设备 ID 是否与用户身份关联？”** 选项中，请根据如下情况进行选择：
+
+- 如果您仅仅是接入了 Xinstall 广告平台而使用了 IDFA，那么选择 **“否，从此 App 中收集的设备 ID 未与用户身份关联”**
+- 如果您在接入 Xinstall 广告平台之外，还自行使用 IDFA 进行别的用途，那么请根据您的实际情况选择对应的选项
+
+![AppStore_IDFA_5](https://cdn.xinstall.com/iOS_SDK%E7%B4%A0%E6%9D%90/IDFA_5.png)
+
+最后，在弹出的弹框中，选择 **“是，我们会将设备 ID 用于追踪目的”**，并点击【发布】按钮：
+
+![AppStore_IDFA_6](https://cdn.xinstall.com/iOS_SDK%E7%B4%A0%E6%9D%90/IDFA_6.png)
+
+
+
+
+
+## 导出 APK / IPA 包并上传
 
 参考官网文档
 
@@ -159,11 +289,33 @@ xinstall.reportEffectEvent("effectId",1);
 
 [Android-集成](https://doc.xinstall.com/integrationGuide/AndroidIntegrationGuide.html#四、导出apk包并上传)
 
-### 五、如何测试功能
+
+
+## 如何测试功能
 
 参考官方文档 [测试集成效果](https://doc.xinstall.com/integrationGuide/comfirm.html)
 
-### 六、更多 Xinstall 进阶功能
+
+
+## 更多 Xinstall 进阶功能
+
+若您想要自定义下载页面，或者查看数据报表等进阶功能，请移步 [Xinstall 官网](https://xinstall.com/) 查看对应文档。
+
+若您在集成过程中如有任何疑问或者困难，可以随时[联系 Xinstall 官方客服](https://wpa1.qq.com/qsw1OZaM?_type=wpa&qidian=true) 在线解决。
+
+### 五、导出apk/ipa包并上传
+
+参考官网文档
+
+[iOS集成-导出ipa包并上传](https://doc.xinstall.com/integrationGuide/iOSIntegrationGuide.html#四、导出ipa包并上传)
+
+[Android-集成](https://doc.xinstall.com/integrationGuide/AndroidIntegrationGuide.html#四、导出apk包并上传)
+
+### 六、如何测试功能
+
+参考官方文档 [测试集成效果](https://doc.xinstall.com/integrationGuide/comfirm.html)
+
+### 七、更多 Xinstall 进阶功能
 
 若您想要自定义下载页面，或者查看数据报表等进阶功能，请移步 [Xinstall 官网](https://xinstall.com) 查看对应文档。
 

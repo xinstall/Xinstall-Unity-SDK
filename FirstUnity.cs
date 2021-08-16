@@ -15,8 +15,16 @@ public class FirstUnity : MonoBehaviour
     {
         xinstall = GameObject.Find("XinstallBehaviour").GetComponent<XinstallBehaviour>(); 
 
-        installResult = GameObject.Find("InstallText").GetComponent<Text>();
-        wakeupResult = GameObject.Find("WakeupText").GetComponent<Text>();
+		XinstallAdConfig adConfig = new XinstallAdConfig();
+		adConfig.isAdOpen = true;
+		
+		adConfig.idfa = "测试idfa";
+        xinstall.setLog(true);
+		xinstall.initWithAd(adConfig);
+		
+		registerWakeupHandlerButtonClick();
+		installResult = GameObject.Find("InstallText").GetComponent<Text>();
+		wakeupResult = GameObject.Find("WakeupText").GetComponent<Text>();
     }
 
     // Update is called once per frame
@@ -40,6 +48,7 @@ public class FirstUnity : MonoBehaviour
         wakeupResult.text = "开始获取唤起";
     }
 
+
     public void reportRegisterButtonClick()
     {
         xinstall.reportRegister();
@@ -47,7 +56,7 @@ public class FirstUnity : MonoBehaviour
 
     public void reportEffectEventButtonClick() 
     {
-        xinstall.reportEffectEvent("250",1);
+        xinstall.reportEffectEvent("1",1);
     }
 
     // callback
@@ -60,7 +69,6 @@ public class FirstUnity : MonoBehaviour
             Debug.Log("XinstallSample getInstallData : 渠道编号=" + installData.channelCode + "，自定义数据=" + installData.data + "，是否是第一次获取安装参数=" + installData.isFirstFetch);
             installResult.text = "安装参数：" + JsonUtility.ToJson(installData);
         }
-        
     }
 
     public void getWakeupData(XinstallData wakeupData)
