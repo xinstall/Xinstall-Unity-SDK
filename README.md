@@ -1,6 +1,10 @@
 # Xinstall-Unity-SDK
 
-> 本SDK 主要为了Unity同学快速集成XinstallSDK 而开发
+> 本 SDK 主要为了 Unity 同学快速集成 XinstallSDK 而开发
+
+> 【重要说明】：从 v1.5.0 版本（含）开始，调用 Xinstall 模块的任意方法前，必须先调用一次初始化方法（init 或者 initWithAd），否则将导致其他方法无法正常调用。
+>
+> 从 v1.5.0 以下升级到 v1.5.0 以上版本后，需要自行修改代码调用初始化方法，Xinstall 模块无法在升级后自动兼容。
 
 ### 一、导入XinstallUnitySDK.unitypackage
 
@@ -39,6 +43,23 @@
 xinstall.init();
 ```
 
+配置androidId 及 serial Number 和控制粘贴板（只对android 有效）
+
+```c#
+XinstallAdConfig adConfig = new XinstallAdConfig();
+// 设置粘贴板是否使用，true 为使用
+adConfig.canClip = true;
+// 设置androidId 则SDK内部不获取androidId
+adConfig.androidId = "";
+// 设置serial 则SDK内部不获取serial
+adConfig.serial = "";
+xinstall.initWithConfigure(adConfig);
+```
+
+
+
+
+
 #### 集成相关功能
 
 ##### 1. 一键拉起
@@ -48,13 +69,66 @@ xinstall.init();
 ​		 在 `Start` 方法中，获取到实例之后注册拉起回调，这样当 App 被拉起时，会回调方法，并可在回调中获取拉起数据。
 
 ```C#
-xinstall.RegisterWakeupHandler(getWakeupData);
+xinstall.registerWakeupHandler(getWakeupData);
 ```
 ```C#
 public void getWakeupData(XinstallData wakeupData) {
         Debug.Log("XinstallSample getWakeupData : 渠道编号=" +wakeupData.channelCode + "， 自定义数据=" + wakeupData.data);
         //wakeupResult.text = "拉起参数：" + JsonUtility.ToJson(wakeupData);
  }
+```
+
+【SDK 版本1.5.5】 之后添加了新的拉起回调注册方法。该方法一定会有回调（即使错误，或者不是唤醒App行为）。
+
+```c#
+xinstall.registerWakeupDetailHandler(getWakeupDetailData);
+```
+
+```c#
+public void getWakeupDetailData(XinstallDetailData wakeupDetailData) {
+        wakeupResult.text = "getWakeupDetailData";
+        if (wakeupDetailData != null) {
+            if (wakeupDetailData.error.errorType == null) {
+                Debug.Log("XinstallSample getWakeupData : 渠道编号=" + wakeupDetailData.wakeUpData.channelCode + "， 自定义数据=" + wakeupDetailData.wakeUpData.data);
+                wakeupResult.text = "拉起参数：" + JsonUtility.ToJson(wakeupDetailData);
+            } else {
+                Debug.Log("未获取到调起数据");
+                wakeupResult.text = "未获取到调起数据";
+                Debug.Log("XinstallSample getWakeupData : 渠道编号=" + wakeupDetailData.error.errorType + "， 自定义数据=" + wakeupDetailData.error.errorMsg);
+                wakeupResult.text = "拉起参数：" + JsonUtility.ToJson(wakeupDetailData);
+            }
+            
+        }
+ }
+```
+
+其中`error`的`errorType` 的对照表如下:
+
+```json
+/** errorType 对照表：
+ * iOS
+ * -1 : SDK 配置错误；
+ * 0 : 未知错误；
+ * 1 : 网络错误；
+ * 2 : 没有获取到数据；
+ * 3 : 该 App 已被 Xinstall 后台封禁；
+ * 4 : 该操作不被允许（一般代表调用的方法没有开通权限）；
+ * 5 : 入参不正确；
+ * 6 : SDK 初始化未成功完成；
+ * 7 : 没有通过 Xinstall Web SDK 集成的页面拉起；
+ *
+ * Android
+ * 1006 : 未执行init 方法;
+ * 1007 : 未传入Activity，Activity 未比传参数
+ * 1008 : 用户未知操作 不处理
+ * 1009 : 不是唤醒执行的调用方法
+ * 1010 : 前后两次调起时间小于1s，请求过于频繁
+ * 1011 : 获取调起参数失败
+ * 1012 : 重复获取调起参数
+ * 1013 : 本次调起并非为XInstall的调起
+ * 1004 : 无权限
+ * 1014 : SCHEME URL 为空
+ */
 ```
 
 ##### 2. 安装参数传递
@@ -89,8 +163,113 @@ xinstall.reportRegister();
 用户可以通过此方法上传相关事件。该事件主要用来统计运营相关数据。但上传之前需要在B端后台创建相关事件，且事件ID需要相同。
 
 ```c#
-xinstall.reportEffectEvent("effectId",1);
+xinstall.reportEffectEvent("事件ID",1);
 ```
+
+###### 3.3 事件明细上报
+> 除了旧有事件业务，我们还开发了事件明细统计，用来统计各个事件具体发生情况。
+>
+> 1.5.7 及以后版本可用
+
+在使用之前要现在后台管理系统中打开该事件明细统计功能，具体如下：
+
+![](https://cdn.xinstall.com/iOS_SDK%E7%B4%A0%E6%9D%90/event.png)
+
+在开启权限之后，我们直接使用Xinstall Unity SDK 的`reportEventWhenOpenDetailInfo`方法上传单个事件的第二个详细值
+
+```c#
+// 三个值分别为 事件ID，事件值，明细值
+xinstall.reportEventWhenOpenDetailInfo("事件ID",50,"张三");
+
+```
+
+最终在事件列表中可以点击查看查阅具体详情的内容
+
+![](https://cdn.xinstall.com/iOS_SDK%E7%B4%A0%E6%9D%90/event_detail_list.png)
+
+
+#### 4. 场景定制统计
+
+场景业务介绍，可到[分享数据统计](https://doc.xinstall.com/environment/分享数据统计.html)页面查看
+
+> 分享统计主要用来统计分享业务相关的数据，例如分享次数、分享查看人数、分享新增用户等。在用户分享操作触发后（注：此处为分享事件触发，非分享完成或成功），可调用如下方法上报一次分享数据：
+
+``` c#
+// 分享裂变上报
+xinstall.reportShareByXinShareId("填写分享人或UID");
+```
+
+**补充说明**
+
+分享人或UID 可由您自行定义，只需要用以区分用户即可。
+
+您可在 Xinstall 管理后台 对应 App 中查看详细分享数据报表，表中的「分享人/UID」即为调用方法时携带的参数，其余字段含义可将鼠标移到字段右边的小问号上进行查看：
+
+![分享报表](https://doc.xinstall.com/integrationGuide/share.jpg)
+
+**可用性**
+
+Android系统，iOS系统
+
+可提供的 1.5.5 及更高版本
+
+#### 5. 苹果搜索广告（ASA）渠道功能
+
+>  如果您在 Xinstall 管理后台对应 App 中，**不使用「ASA渠道」，则无需进行本小节中额外的集成工作**，也能正常使用 Xinstall 提供的其他功能。
+
+##### 5.1 更换初始化方法
+
+**使用新的 initWithAd 方法，替代原先的 init 方法来进行模块的初始化**
+
+**initWithAd**
+
+**入参说明**：需要主动传入参数，JSON对象
+
+入参内部字段：
+
+* iOS 端：
+
+  <table>
+         <tr>
+             <th>参数名</th>
+             <th>参数类型</th>
+             <th>描述 </th>
+         </tr>
+         <tr>
+             <th>idfa</th>
+             <th>string</th>
+             <th>iOS 系统中的广告标识符（不需要时可以不传）</th>
+         </tr>
+         <tr>
+             <th>asaEnable</th>
+             <th>boolean</th>
+             <th>是否开启 ASA 渠道，true 时为开启，false 或者不传时均为不开启</th>
+         </tr>
+     </table>
+
+**回调说明**：无需传入回调函数
+
+**调用示例**
+
+```dart
+XinstallAdConfig adConfig = new XinstallAdConfig();
+// android 配置
+adConfig.isAdOpen = true;
+adConfig.oaid = "外部传入oaid";
+adConfig.advertisingId = "外部传入gaid"
+// iOS 配置		
+adConfig.idfa = "测试idfa";
+// iOS asa 功能 
+adConfig.asaEnable = true; // 开启asa 功能
+       
+xinstall.initWithAd(adConfig);
+```
+
+**可用性**
+
+iOS系统
+
+可提供的 1.5.5 及更高版本
 
 ### 三、平台配置
 
@@ -202,9 +381,10 @@ xinstall.reportEffectEvent("effectId",1);
 
 * iOS 端：
 
-  | 参数名 | 参数类型 | 描述                   |
-  | ------ | -------- | ---------------------- |
-  | idfa   | 字符串   | iOS 系统中的广告标识符 |
+  | 参数名    | 参数类型 | 描述                                                         |
+  | --------- | -------- | ------------------------------------------------------------ |
+  | idfa      | string   | iOS 系统中的广告标识符                                       |
+  | asaEnable | boolean  | 是否开启 ASA 渠道，true 时为开启，false 或者不传时均为不开启 **独立于广告的功能，在本文档的【二、Unity 集成】中有介绍** |
 
 * Android 端：
 

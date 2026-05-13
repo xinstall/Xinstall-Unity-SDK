@@ -19,12 +19,19 @@ public class FirstUnity : MonoBehaviour
 		adConfig.isAdOpen = true;
 		
 		adConfig.idfa = "测试idfa";
-        xinstall.setLog(true);
+        adConfig.asaEnable = true;
+        // xinstall.setLog(true);
 		xinstall.initWithAd(adConfig);
+        // xinstall.init();
 		
-		registerWakeupHandlerButtonClick();
+		
 		installResult = GameObject.Find("InstallText").GetComponent<Text>();
 		wakeupResult = GameObject.Find("WakeupText").GetComponent<Text>();
+
+        registerWakeupHandlerButtonClick();
+
+        installResult.text = "开始安装";
+        xinstall.getInstallParam(10,getInstallData);
     }
 
     // Update is called once per frame
@@ -44,7 +51,9 @@ public class FirstUnity : MonoBehaviour
 
     public void registerWakeupHandlerButtonClick()
     {
+        
         xinstall.registerWakeupHandler(getWakeupData);
+        xinstall.registerWakeupDetailHandler(getWakeupDetailData);
         wakeupResult.text = "开始获取唤起";
     }
 
@@ -57,6 +66,16 @@ public class FirstUnity : MonoBehaviour
     public void reportEffectEventButtonClick() 
     {
         xinstall.reportEffectEvent("1",1);
+    }
+
+    public void reportShareFissionButtonClick() {
+		Debug.Log("unity FirstUnity reportShareById");
+    	xinstall.reportShareByXinShareId("unity3d-test");
+    }
+
+    public void reportEventWhenOpenDetailInfo() {
+        Debug.Log("unity FirstUnity reportEventWhenOpenDetailInfo");
+        xinstall.reportEventWhenOpenDetailInfo("123",50,"张三");
     }
 
     // callback
@@ -80,5 +99,21 @@ public class FirstUnity : MonoBehaviour
 			Debug.Log("XinstallSample getWakeupData : 渠道编号=" + wakeupData.channelCode + "， 自定义数据=" + wakeupData.data);
 			wakeupResult.text = "拉起参数：" + JsonUtility.ToJson(wakeupData);
 		}
+    }
+
+    public void getWakeupDetailData(XinstallDetailData wakeupDetailData) {
+        wakeupResult.text = "getWakeupDetailData";
+        if (wakeupDetailData != null) {
+            if (wakeupDetailData.error.errorType == null) {
+                Debug.Log("XinstallSample getWakeupData : 渠道编号=" + wakeupDetailData.wakeUpData.channelCode + "， 自定义数据=" + wakeupDetailData.wakeUpData.data);
+                wakeupResult.text = "拉起参数：" + JsonUtility.ToJson(wakeupDetailData);
+            } else {
+                Debug.Log("未获取到调起数据");
+                wakeupResult.text = "未获取到调起数据";
+                Debug.Log("XinstallSample getWakeupData : 渠道编号=" + wakeupDetailData.error.errorType + "， 自定义数据=" + wakeupDetailData.error.errorMsg);
+                wakeupResult.text = "拉起参数：" + JsonUtility.ToJson(wakeupDetailData);
+            }
+            
+        }
     }
 }
